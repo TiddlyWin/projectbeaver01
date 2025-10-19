@@ -1,0 +1,46 @@
+/* Optional: override Bulma vars BEFORE import
+$primary: #7957d5; // tweak as you like
+*/
+
+@use "../../node_modules/bulma/sass/index" as bulma with (
+  $primary: #7957d5,
+  $family-sans-serif: "Verdana"
+);
+
+/* --- Bulma core via Sass modules --- */
+@use "bulma/sass/utilities" as *;
+@use "bulma/sass/base" as *;
+@use "bulma/sass/elements" as *;
+@use "bulma/sass/form" as *;
+@use "bulma/sass/components" as *;
+@use "bulma/sass/grid" as *;
+@use "bulma/sass/layout" as *;
+
+/* --- Bulma themes (adds light + dark) --- */
+/* Includes both media-query (prefers-color-scheme) and attribute/class selectors */
+@use "bulma/sass/themes" as *;
+
+/* --- Optional global tweaks via CSS variables (runtime) --- */
+/* You can tweak a few variables without recompiling */
+:root {
+    /* example: roundness */
+    --bulma-radius: 8px;
+}
+
+/* Example: force slightly higher contrast in dark mode */
+:root[data-theme="dark"] {
+    /* You can override any --bulma-* variable here */
+    /* Example titles a bit brighter in dark */
+    --bulma-title-color: hsl(0 0% 96%);
+}
+
+html,
+body {
+    height: 100%;
+
+    .login {
+        width: 300px;
+    }
+}
+
+
