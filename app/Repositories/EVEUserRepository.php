@@ -2,33 +2,51 @@
 
 namespace App\Repositories;
 
+use App\Models\User;
 use App\Models\Character;
+use App\Models\CharacterToken;
 
 class EVEUserRepository
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
+    public function findByEveCharacterId(int $characterId): ?User
     {
-        //
+        return Character::where('eve_character_id', $characterId)->first()?->user;
     }
 
-    public function findByEveCharacterId(int $eveCharacterId): Character
+    public function createUser(array $data): User
     {
-        return Character::where('eve_character_id', $eveCharacterId)->first();
+        return User::create([
+            'name' => $data['name'],
+        ]);
     }
 
-    public function createOrUpdateFromEveLogin(int $eveCharacterId, array $payload): Character
+    public function createOrUpdateCharacter(User $user, int $characterId, array $data): Character
     {
-        dd($payload);
-//        return Character::updateOrCreate(
-//            ['eve_character_id' => $eveCharacterId],
-//            [
-//                'user_id' => $payload[],
-//                'name' => $eveCharacterName,
-//                'portrait_url' => $avatar,
-//            ]
-//        );
+        $character = Character::updateOrCreate(
+            ['eve_character_id' => $characterId],
+            [
+                'user_id' => $user->id,
+                'name' => $data['name'],
+                'eve_character_id' => $characterId,
+                'portrait_url' => $data['portrait_url'] ?? null,
+                'metadata' => $data['metadata'] ?? [],
+            ]
+        );
+
+        CharacterToken::updateOrCreate(
+            ['character_id' => $character->id],
+            [
+                'access_token' => encrypt($data['token']),
+                'refresh_token' => encrypt($data['refresh_token']),
+                'expires_at' => $data['expires_at'],
+            ]
+        );
+
+        // Set as main character if user has none
+        if (!$user->main_character_id) {
+            $user->update(['main_character_id' => $character->id]);
+        }
+
+        return $character;
     }
 }
