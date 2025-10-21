@@ -32,7 +32,11 @@ class AuthController
     {
         try {
             $eveIdentity = Socialite::driver('eveonline')->user();
-            $user = $this->eveAuth->authenticate($eveIdentity);
+            $result = $this->eveAuth->authenticate($eveIdentity);
+            dd($result);
+            $user = $result->getData();
+            dd($user);
+            $needsEmail = $result->getData('needs_email');
 
             return redirect(config('app.auth_frontend'));
         } catch (Throwable $e) {

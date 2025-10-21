@@ -17,15 +17,15 @@
         "socialiteproviders/eveonline": "^4.3"
     },
     "require-dev": {
-        "roave/security-advisories": "dev-latest",
         "fakerphp/faker": "^1.23",
-        "laravel/pail": "^1.2.2",
+        "laravel/pail": "^1.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.1",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "roave/security-advisories": "dev-latest"
     },
     "autoload": {
         "psr-4": {

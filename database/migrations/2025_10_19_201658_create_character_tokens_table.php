@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('character_id')->constrained()->onDelete('cascade');
             $table->text('access_token');
             $table->text('refresh_token');
+            $table->json('scopes')->nullable();
             $table->timestamp('expires_at');
             $table->timestamps();
         });

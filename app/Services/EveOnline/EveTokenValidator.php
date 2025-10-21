@@ -33,7 +33,7 @@ class EveTokenValidator
 
         return [
             'character_id' => $this->extractCharacterId($payload),
-            'payload' => $payload,
+            ...$payload,
         ];
     }
 
@@ -51,13 +51,17 @@ class EveTokenValidator
         }
     }
 
+    /*
+     * Extract the character ID from the user part of the payload.
+     *
+     */
     protected function extractCharacterId(array $payload): int
     {
         if (!isset($payload['sub'])) {
             throw new RuntimeException('No character ID in token');
         }
 
-        // EVE tokens have format "CHARACTER:EVE:123456"
+        // EVE user sub has the format "CHARACTER:EVE:123456"
         $sub = str_replace('CHARACTER:EVE:', '', $payload['sub']);
 
         return (int) $sub;

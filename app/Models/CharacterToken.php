@@ -12,6 +12,7 @@ class CharacterToken extends Model
         'access_token',
         'refresh_token',
         'expires_at',
+        'scopes',
     ];
 
     protected function casts(): array

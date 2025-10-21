@@ -4,12 +4,14 @@ namespace App\Services\EveOnline;
 
 use App\Models\Character;
 use App\Models\User;
-use App\Repositories\EVEUserRepository;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Redirector;
+use App\Repositories\EVECharacterRepository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use JsonException;
+use RuntimeException;
+use Throwable;
 
 class EveAuthenticationService
 {
@@ -17,9 +19,9 @@ class EveAuthenticationService
      * Create a new class instance.
      */
     public function __construct(
-        protected EveApiService $eveApiService,
-        protected EveTokenValidator $eveTokenValidator,
-        protected EVEUserRepository $eveUserRepository
+        protected EveApiService          $eveApiService,
+        protected EveTokenValidator      $eveTokenValidator,
+        protected EVECharacterRepository $eveCharacterRepository
     )
     {
         //
@@ -27,45 +29,68 @@ class EveAuthenticationService
 
     /**
      * @throws JsonException
+     * @throws Throwable
      */
-    public function authenticate(SocialiteUser $eveIdentity): RedirectResponse|Redirector
+    public function authenticate(SocialiteUser $eveIdentity): JsonResponse
     {
+        Log::info('Authenticating user from EVE SSO');
+
         $validated = $this->eveTokenValidator->validate($eveIdentity->token);
-        $characterId = $validated['character_id'];
+        $tokenObj = [
+            'access_token' => $eveIdentity->token,
+            'refresh_token' => $eveIdentity->refreshToken,
+            'expires_in' => $eveIdentity->expiresIn,
+            'scopes' => $eveIdentity->approved_scopes
+        ];
 
-        $user = Auth::user();
-        $email = $eveIdentity->email ?? $eveIdentity->getEmail();
-        $eveCharacterName = $eveIdentity->user['name'] ?? $eveIdentity->getName();
+        Log::info('Validated Token: Token valid');
 
-        if(!$user) {
-            if (Character::where('eve_character_id', $eveIdentity->id)->exists()) {
-                return redirect(config('app.frontend'))
-                    ->with('error', 'This character is already linked to another account.');
-            }
-
-            $user = $email
-                ? User::firstOrCreate(['email' => $email], [
-                    'name' => $eveCharacterName ?: 'EVE Pilot',
-                    'password' => bcrypt(str()->random(32)),
-                ])
-                : User::firstOrCreate(['email' => "eve_{$characterId}@local"], [
-                    'name' => $eveCharacterName ?: 'EVE Pilot',
-                    'password' => bcrypt(str()->random(32)),
-                ]);
-
+        // Check the character owner hash matches the one in the token
+        // TODO:: Sense check this and perhaps add more checking against the token?
+        if ($eveIdentity->attributes['character_owner_hash'] !== $validated['owner']) {
+            Log::warning('Character owner hash does not match');
+            throw new RuntimeException('Character owner hash does not match');
         }
 
-        dd($user, $eveIdentity, $validated);
+        //Use the validated token to supply the necessary data
+        $characterId = $validated['character_id'];
+        $eveCharacterName = $validated['name'];
 
-        //check if user exists
+        $user = Auth::user();
+        $character = Character::where('eve_character_id', $characterId)->first();
 
+        Log::info('User: ' . $user);
 
+        // TODO:: Still a work in progress
+        if (!$user) {
+           if(!$character) {
+               Log::info('Creating new character for user');
+               $user = User::firstOrCreate(['email' => "eve_{$characterId}@local"], [
+                   'name' => $eveCharacterName ?: 'EVE Pilot',
+                   'password' => bcrypt(str()->random(32)),
+               ]);
 
-        $user = $this->eveUserRepository->createOrUpdateCharacter($user, (int) $characterId, (array)$validated);
+               $this->eveCharacterRepository->createOrUpdateCharacter($user, (int)$characterId, $validated, $tokenObj);
+           }
+
+            $user = $character->user;
+           if($character->id !== $user->main_character_id) {
+               throw new RuntimeException('Please log in with your main character');
+           }
+        }
 
         // Log the user in
         Auth::login($user);
 
-        return $user;
+        Log::info('User authenticated and logged in', [
+            'user_id' => $user->id,
+            'character_id' => $character->eve_character_id,
+        ]);
+
+        return response()->json([
+            'user_id' => $user->id,
+            'character_id' => $character->eve_character_id,
+            'needs_email' => preg_match('/^eve_\d+@local$/', $user->email ?? '') === 1,
+        ]);
     }
 }
