@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Resources\UserResource;
 
 class ProfileController
 {
-    public function me(Request $request)
+    public function me(UpdateProfileRequest $request): UserResource
     {
         $user = $request->user()->load(['characters', 'mainCharacter']);
-        return response()->json($user);
+        return new UserResource($user);
     }
 }

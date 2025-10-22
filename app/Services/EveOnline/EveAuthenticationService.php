@@ -63,20 +63,27 @@ class EveAuthenticationService
 
         // TODO:: Still a work in progress
         if (!$user) {
-           if(!$character) {
-               Log::info('Creating new character for user');
-               $user = User::firstOrCreate(['email' => "eve_{$characterId}@local"], [
-                   'name' => $eveCharacterName ?: 'EVE Pilot',
-                   'password' => bcrypt(str()->random(32)),
-               ]);
+            if (!$character) {
+                Log::info('Creating new character for user');
+                $user = User::firstOrCreate(['email' => "eve_{$characterId}@local"], [
+                    'name' => $eveCharacterName ?: 'EVE Pilot',
+                    'password' => bcrypt(str()->random(32)),
+                ]);
 
-               $this->eveCharacterRepository->createOrUpdateCharacter($user, (int)$characterId, $validated, $tokenObj);
-           }
+                $this->eveCharacterRepository->createOrUpdateCharacter($user, (int)$characterId, $validated, $tokenObj);
+            }
 
-            $user = $character->user;
-           if($character->id !== $user->main_character_id) {
-               throw new RuntimeException('Please log in with your main character');
-           }
+            // look up user by character
+            $user = $this->eveCharacterRepository->findByEveCharacterId((int)$characterId);
+
+            if (!$user) {
+                Log::warning('No user found for character ID: ' . $characterId);
+                throw new RuntimeException('No user found for character ID: ' . $characterId);
+            }
+
+            if ($character->id !== $user->main_character_id) {
+                throw new RuntimeException('Please log in with your main character');
+            }
         }
 
         // Log the user in
@@ -87,7 +94,7 @@ class EveAuthenticationService
             'character_id' => $character->eve_character_id,
         ]);
 
-        return response()->json([
+        return response()->json(data: [
             'user_id' => $user->id,
             'character_id' => $character->eve_character_id,
             'needs_email' => preg_match('/^eve_\d+@local$/', $user->email ?? '') === 1,
