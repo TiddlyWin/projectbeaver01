@@ -17,6 +17,14 @@ const routes = [
         requiresAuth: true
         }
     },
+    {
+        path: '/account/register',
+        name: 'register',
+        component: () => import('./Pages/RegisterView.vue'),
+        meta: {
+            requiresAuth: false
+        }
+    }
 ];
 
 const router = createRouter({ history: createWebHistory('/'), routes });

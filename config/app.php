@@ -126,4 +126,5 @@ return [
     // Custom Configs
     'frontend' => env('FRONTEND_URL', '/'),
     'auth_frontend' => env('AUTH_FRONTEND_URL', '/dashboard'),
+    'register_email_uri' => env('REGISTER_EMAIL_URI', '/account/register')
 ];
