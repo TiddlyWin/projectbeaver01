@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Account\AccountService;
+use App\Services\Account\AccountServiceInterface;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Eveonline\Provider;
@@ -15,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AccountServiceInterface::class, AccountService::class);
     }
 
     /**

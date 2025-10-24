@@ -38,7 +38,7 @@ class AuthController
             $needsEmail = $result->getData('needs_email');
 
             if($needsEmail) {
-                return redirect()->intended('/account/register');
+                return redirect()->intended(config('app.register_email_uri'));
             }
 
             return redirect()->intended(config('app.auth_frontend'));

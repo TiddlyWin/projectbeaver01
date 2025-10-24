@@ -14,7 +14,7 @@ const routes = [
         name: 'dashboard',
         component: () => import('./Pages/DashboardView.vue'),
         meta: {
-        requiresAuth: true
+            requiresAuth: true
         }
     },
     {
@@ -22,7 +22,7 @@ const routes = [
         name: 'register',
         component: () => import('./Pages/RegisterView.vue'),
         meta: {
-            requiresAuth: false
+            requiresAuth: true
         }
     }
 ];
@@ -42,6 +42,8 @@ async function bootstrapSession() {
 
 router.beforeEach(async (to) => {
     await bootstrapSession();
+
+    console.log(isAuthenticated)
     // if logout hit the laravel logout do the logout and then redirect to home
     if (to.path === '/logout') {
         await fetch('/logout', { credentials: 'include' });

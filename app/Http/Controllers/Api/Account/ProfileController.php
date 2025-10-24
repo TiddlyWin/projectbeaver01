@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\Account;
 
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;

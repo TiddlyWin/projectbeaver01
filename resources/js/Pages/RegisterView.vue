@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import dbmLogo from "../../assets/images/dbmLogo.png";
+import axios from "axios";
 
 const email = ref("");
 const submitted = ref(false);
@@ -22,8 +23,11 @@ function handleSubmit(event) {
     submitted.value = true;
 
     if (validEmail.value) {
-        // Proceed with form submission logic, e.g., send to server
-        console.log("Form submitted with email:", email.value);
+       axios.post('/api/account/register', {
+              email: email.value
+       }).then((res) => {
+           console.log(res.data)
+       })
     }
 }
 
