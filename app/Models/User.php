@@ -37,7 +37,6 @@ class User extends Authenticatable
         'remember_token',
         'main_character_id',
         'provider',
-        'token',
     ];
 
     /**

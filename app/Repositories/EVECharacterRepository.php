@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\User;
 use App\Models\Character;
 use App\Models\CharacterToken;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -59,5 +58,12 @@ class EVECharacterRepository
 
             return $character;
         });
+    }
+
+    public function existForOtherUser(int $characterId, int $userId): bool
+    {
+        return Character::where('eve_character_id', $characterId)
+            ->where('user_id', '!=', $userId)
+            ->exists();
     }
 }

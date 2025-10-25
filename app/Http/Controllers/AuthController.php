@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\EveOnline\EveAuthenticationService;
+use App\Services\EveOnline\EveCharacterAuthenticationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +13,8 @@ use Throwable;
 class AuthController
 {
     public function __construct(
-        protected EveAuthenticationService $eveAuth)
-    {
-
+        protected EveCharacterAuthenticationService $eveAuth
+    ){
     }
 
     /**

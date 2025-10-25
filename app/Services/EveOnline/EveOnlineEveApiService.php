@@ -2,7 +2,7 @@
 
 namespace App\Services\EveOnline;
 
-class EveApiService
+class EveOnlineEveApiService
 {
     /**
      * Create a new class instance.
