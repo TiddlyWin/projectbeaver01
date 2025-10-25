@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import dbmLogo from "../../assets/images/dbmLogo.png";
 import axios from "axios";
+import router from "@/routes.js";
 
 const email = ref("");
 const submitted = ref(false);
@@ -25,8 +26,8 @@ function handleSubmit(event) {
     if (validEmail.value) {
        axios.post('/api/account/register', {
               email: email.value
-       }).then((res) => {
-           console.log(res.data)
+       }).then(() => {
+           router.push('/dashboard')
        })
     }
 }

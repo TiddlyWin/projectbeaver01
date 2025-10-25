@@ -43,14 +43,12 @@ async function bootstrapSession() {
 router.beforeEach(async (to) => {
     await bootstrapSession();
 
-    console.log(isAuthenticated)
     // if logout hit the laravel logout do the logout and then redirect to home
     if (to.path === '/logout') {
         await fetch('/logout', { credentials: 'include' });
         window.location.href = '/';
         return false;
     }
-
 
     if (to.meta.requiresAuth && !isAuthenticated) {
         const returnTo = encodeURIComponent(to.fullPath);

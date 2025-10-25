@@ -35,9 +35,9 @@ class AuthController
             $eveIdentity = Socialite::driver('eveonline')->user();
             $result = $this->eveAuth->authenticate($eveIdentity);
 
-            $needsEmail = $result->getData('needs_email');
+            $data = $result->getData('needs_email');
 
-            if($needsEmail) {
+            if($data['needs_email']) {
                 return redirect()->intended(config('app.register_email_uri'));
             }
 

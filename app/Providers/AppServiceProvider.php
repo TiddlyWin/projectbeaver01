@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\Account\AccountService;
 use App\Services\Account\AccountServiceInterface;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Eveonline\Provider;
@@ -32,5 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(static function (SocialiteWasCalled $socialite) {
            $socialite->extendSocialite('eveonline', Provider::class);
         });
+
+        JsonResource::withoutWrapping();
     }
 }

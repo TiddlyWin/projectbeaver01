@@ -59,9 +59,8 @@ class EveAuthenticationService
         $user = Auth::user();
         $character = Character::where('eve_character_id', $characterId)->first();
 
-        Log::info('User: ' . $user);
-
         // TODO:: Still a work in progress
+        // If user is not logged in they are linking an additional character
         if (!$user) {
             if (!$character) {
                 Log::info('Creating new character for user');
@@ -71,32 +70,32 @@ class EveAuthenticationService
                 ]);
 
                 $this->eveCharacterRepository->createOrUpdateCharacter($user, (int)$characterId, $validated, $tokenObj);
+
+            } else {
+                $user = $character->user;
+                if ($character->id !== $user->main_character_id) {
+                    throw new RuntimeException('Please log in with your main character');
+                }
             }
 
-            // look up user by character
-            $user = $this->eveCharacterRepository->findByEveCharacterId((int)$characterId);
+            // Log the user in
+            Auth::login($user);
 
-            if (!$user) {
-                Log::warning('No user found for character ID: ' . $characterId);
-                throw new RuntimeException('No user found for character ID: ' . $characterId);
-            }
+            Log::info('User authenticated and logged in', [
+                'user_id' => $user->id,
+                'character_id' => $character->eve_character_id,
+            ]);
 
-            if ($character->id !== $user->main_character_id) {
-                throw new RuntimeException('Please log in with your main character');
-            }
+            return response()->json(data: [
+                'needs_email' => preg_match('/^eve_\d+@local$/', $user->email ?? '') === 1,
+            ]);
         }
 
-        // Log the user in
-        Auth::login($user);
+        $this->eveCharacterRepository->createOrUpdateCharacter($user, (int)$characterId, $validated, $tokenObj);
 
-        Log::info('User authenticated and logged in', [
-            'user_id' => $user->id,
-            'character_id' => $character->eve_character_id,
-        ]);
+        Log::info('Character linked to current logged in user.');
 
         return response()->json(data: [
-            'user_id' => $user->id,
-            'character_id' => $character->eve_character_id,
             'needs_email' => preg_match('/^eve_\d+@local$/', $user->email ?? '') === 1,
         ]);
     }

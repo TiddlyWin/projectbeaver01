@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\User;
 use App\Models\Character;
 use App\Models\CharacterToken;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -13,11 +14,11 @@ class EVECharacterRepository
 {
     /**
      * @param int $characterId
-     * @return User|null
+     * @return Character|null
      */
-    public function findByEveCharacterId(int $characterId): ?User
+    public function findByEveCharacterId(int $characterId): ?Character
     {
-        return Character::where('eve_character_id', $characterId)->first()?->user;
+        return Character::where('eve_character_id', $characterId)->with('user')->first();
     }
 
     /**

@@ -21,7 +21,6 @@ class AccountController extends Controller
         try {
             $user = $request->user();
 
-            dump($user);
             $this->accountService->registerEmail($user, $request->validated());
             return response()->json([
                 'message' => 'Email registered successfully.'
