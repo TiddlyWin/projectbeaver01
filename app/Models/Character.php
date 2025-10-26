@@ -17,6 +17,7 @@ class Character extends Model
         'name',
         'portrait_url',
         'metadata',
+        'owner_hash',
     ];
 
     protected $casts = [

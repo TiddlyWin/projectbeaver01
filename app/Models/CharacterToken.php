@@ -11,14 +11,15 @@ class CharacterToken extends Model
         'character_id',
         'access_token',
         'refresh_token',
-        'expires_at',
+        'expires_in',
         'scopes',
+        'owner_hash',
     ];
 
     protected function casts(): array
     {
         return [
-            'expires_at' => 'datetime',
+            'expires_in' => 'int',
         ];
     }
 

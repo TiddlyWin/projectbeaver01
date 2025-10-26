@@ -2,7 +2,9 @@
 
 namespace App\Services\EveOnline;
 
+use App\DTO\EveOnline\EveTokenDTO;
 use App\Models\Character;
+use App\Models\CharacterToken;
 use App\Models\User;
 use App\Repositories\EVECharacterRepository;
 use Illuminate\Http\JsonResponse;
@@ -46,18 +48,18 @@ readonly class EveCharacterAuthenticationService
     {
         Log::info('[EveAuth] Authenticating user from EVE SSO');
 
-        $validated = $this->eveTokenValidator->validate($eveIdentity->token);
+        $validatedDTO = $this->eveTokenValidator->validate($eveIdentity->token);
         $tokenObj = $this->makeTokenObject($eveIdentity);
 
         Log::info('[EveAuth] Validated Token: Token valid');
 
-        $this->assertOwnerHash($eveIdentity, $validated);
+        $this->assertOwnerHash($eveIdentity, $validatedDTO->payload);
 
         Log::info('[EveAuth] Owner hash verified');
 
         //Use the validated token to supply the necessary data
-        $characterId = (int)($validated['character_id'] ?? 0);
-        $eveCharacterName = $validated['name'] ?? '';
+        $characterId = $validatedDTO->characterId ?? 0;
+        $eveCharacterName = $validatedDTO->name ?? '';
 
         if ($characterId <= 0) {
 
@@ -70,15 +72,19 @@ readonly class EveCharacterAuthenticationService
 
         }
 
-        $user = Auth::user();
+        // Slightly more readable to separate the two paths
+        if(Auth::check()) {
+            Log::info('[EveAuth] User already authenticated, linking character to existing user.');
+            return $this->linkCharacter(Auth::user(), $characterId, $validatedDTO, $tokenObj);
+        }
 
-        return $user
-            ? $this->linkCharacter($user, $characterId, $validated, $tokenObj)
-            : $this->loginViaCharacter($characterId, $eveCharacterName, $validated, $tokenObj);
+        return $this->loginViaCharacter($characterId, $eveCharacterName, $validatedDTO, $tokenObj);
+
     }
 
     /**
-     * @return array{access_token: string, refresh_token: string|null, expires_in: int|null, scopes: array<string>}
+     * @param SocialiteUser $eveIdentity
+     * @return array
      */
     private function makeTokenObject(SocialiteUser $eveIdentity): array
     {
@@ -86,7 +92,7 @@ readonly class EveCharacterAuthenticationService
             'access_token' => $eveIdentity->token,
             'refresh_token' => $eveIdentity->refreshToken,
             'expires_in' => $eveIdentity->expiresIn,
-            'scopes' => $eveIdentity->approved_scopes
+            'scopes' => $eveIdentity->scopes
         ];
     }
 
@@ -94,13 +100,11 @@ readonly class EveCharacterAuthenticationService
      * Assert that the owner hash of the given EVE identity matches the validated data.
      *
      * @param SocialiteUser $eveIdentity The EVE identity obtained via social authentication.
-     * @param array $validated The validated data containing the expected owner hash.
-     *
-     * @throws ValidationException If the owner hash does not match the expected value.
+     * @param array $payload
      */
-    private function assertOwnerHash(SocialiteUser $eveIdentity, array $validated): void
+    private function assertOwnerHash(SocialiteUser $eveIdentity, array $payload): void
     {
-        $expected = $validated['owner'] ?? null;
+        $expected = $payload['owner'] ?? null;
         $actual = $eveIdentity->attributes['character_owner_hash'] ?? null;
 
         if ($expected !== $actual) {
@@ -125,12 +129,12 @@ readonly class EveCharacterAuthenticationService
      *
      * @param int $characterId The EVE character ID used for authentication.
      * @param string $name The name of the character (can be empty).
-     * @param array $validated Validated data for the character.
+     * @param EveTokenDTO $validated Validated data for the character.
      * @param array $tokenData Token data associated with the character.
      * @return JsonResponse         JSON response indicating authentication status or additional actions.
      * @throws Throwable
      */
-    private function loginViaCharacter(int $characterId, string $name, array $validated, array $tokenData): JsonResponse
+    private function loginViaCharacter(int $characterId, string $name, EveTokenDTO $validated, array $tokenData): JsonResponse
     {
         $character = $this->eveCharacterRepository->findByEveCharacterId($characterId);
 
@@ -139,7 +143,12 @@ readonly class EveCharacterAuthenticationService
 
             $user = User::firstOrCreate(
                 ['email' => "eve_{$characterId}@local"],
-                ['name' => $name ?: 'EVE Pilot', 'password' => Hash::make(Str::random(32))]
+                [
+                    'name' => $name ?: 'EVE Pilot',
+                    'password' => Hash::make(Str::random(32)),
+                    'owner_hash' => $validated->owner ?? null
+                ]
+
             );
 
             $this->eveCharacterRepository->createOrUpdateCharacter($user, $characterId, $validated, $tokenData);
@@ -175,13 +184,13 @@ readonly class EveCharacterAuthenticationService
      *
      * @param User $user The user to link the character to.
      * @param int $characterId The ID of the character to be linked.
-     * @param array $validated The validated data for the character.
+     * @param EveTokenDTO $validated The validated data for the character.
      * @param array $tokenData The token data for authentication.
      *
      * @return JsonResponse
      * @throws Throwable
      */
-    private function linkCharacter(User $user, int $characterId, array $validated, array $tokenData): JsonResponse
+    private function linkCharacter(User $user, int $characterId, EveTokenDTO $validated, array $tokenData): JsonResponse
     {
         Log::info('[EveAuth] Linking character to existing user');
 

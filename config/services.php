@@ -36,9 +36,17 @@ return [
     ],
 
     'eveonline' => [
-        'client_id'     => env('EVEONLINE_CLIENT_ID'),
-        'client_secret' => env('EVEONLINE_CLIENT_SECRET'),
-        'redirect'      => env('EVEONLINE_REDIRECT_URI'),
+        'client_id'     => env('EVE_ONLINE_CLIENT_ID'),
+        'client_secret' => env('EVE_ONLINE_CLIENT_SECRET'),
+        'redirect'      => env('EVE_ONLINE_REDIRECT_URI'),
+        'metadata_url'        => env('EVE_ONLINE_METADATA_URL', 'https://login.eveonline.com/.well-known/oauth-authorization-server'),
+        'metadata_cache_time' => env('EVE_ONLINE_METADATA_CACHE', 300),
+        'accepted_issuers'    => [
+            'https://login.eveonline.com',
+            'logineveonline.com', // legacy quirk if you want to accept it
+        ],
+        'accepted_audience'   => env('EVE_ONLINE_ACCEPTED_AUD', 'EVE Online'),
+        'alg'                 => 'RS256',
     ],
 
 ];

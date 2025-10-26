@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\DTO\EveOnline\EveTokenDTO;
 use App\Models\User;
 use App\Models\Character;
 use App\Models\CharacterToken;
@@ -23,31 +24,33 @@ class EVECharacterRepository
     /**
      * @param User $user
      * @param int $characterId
-     * @param array $data
+     * @param EveTokenDTO $data
      * @param array $tokenObj
      * @return Character
      * @throws Throwable
      */
-    public function createOrUpdateCharacter(User $user, int $characterId, array $data, array $tokenObj): Character
+    public function createOrUpdateCharacter(User $user, int $characterId, EveTokenDTO $data, array $tokenObj): Character
     {
         return DB::transaction(static function () use ($user, $characterId, $data, $tokenObj) {
             $character = Character::updateOrCreate(
                 ['eve_character_id' => $characterId],
                 [
                     'user_id' => $user->id,
-                    'name' => $data['name'],
+                    'owner_hash' => $data->owner ?? null,
+                    'name' => $data->name,
                     'portrait_url' => 'https://images.evetech.net/characters/'. $characterId .'/portrait?size=256' ?? null,
-                    'metadata' => $data['metadata'] ?? [],
+                    'metadata' => $data->metadata ?? [],
                 ]
             );
 
             CharacterToken::updateOrCreate(
                 ['character_id' => $character->id],
                 [
+                    'owner_hash' => $data->owner ?? null,
                     'access_token' => Crypt::encryptString($tokenObj['access_token']),
                     'refresh_token' => Crypt::encryptString($tokenObj['refresh_token']),
                     'scopes' => $tokenObj['scopes'],
-                    'expires_at' => $tokenObj['expires_in'],
+                    'expires_in' => $tokenObj['expires_in'],
                 ]
             );
 

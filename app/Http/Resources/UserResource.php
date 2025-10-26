@@ -17,11 +17,9 @@ final class UserResource extends JsonResource
             'id'    => (int) $this->resource->getKey(),
             'name'  => (string) $this->resource->name,
             'email' => $this->resource->email,
-
             'main_character' => CharacterResource::make(
                 $this->whenLoaded('mainCharacter')
             ),
-
             'characters' => CharacterResource::collection(
                 $this->whenLoaded('characters')
             ),

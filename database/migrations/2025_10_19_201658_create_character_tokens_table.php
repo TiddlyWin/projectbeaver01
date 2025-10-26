@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('access_token');
             $table->text('refresh_token');
             $table->json('scopes')->nullable();
-            $table->timestamp('expires_at');
+            $table->bigInteger('expires_in')->nullable();
             $table->timestamps();
         });
     }

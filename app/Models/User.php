@@ -25,6 +25,7 @@ class User extends Authenticatable
         'email',
         'password',
         'main_character_id',
+        'owner_hash'
     ];
 
     /**

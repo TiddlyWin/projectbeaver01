@@ -2,68 +2,107 @@
 
 namespace App\Services\EveOnline;
 
-use Exception;
+
+use App\DTO\EveOnline\EveTokenDTO;
+use App\Services\EveOnline\AuthHelpers\JwksMetadataService;
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
+use InvalidArgumentException;
 use JsonException;
 use RuntimeException;
 
 class EveTokenValidator
 {
+    public function __construct(
+        protected JwksMetadataService $jwksMetadataService
+    ) {}
+
+    /**
+     * @throws JsonException|InvalidArgumentException|RuntimeException
+     */
+    public function validate(string $jwt): EveTokenDTO
+    {
+        // Decode header to get alg/kid fast (don’t trust it yet)
+        [$headerB64, $payloadB64, $sigB64] = $this->split($jwt);
+
+        $rawHeader  = $this->jsonDecode($this->b64urlDecode($headerB64));
+        $alg        = $rawHeader['alg'] ?? null;
+
+        $cfg = config('services.eveonline');
+        if (!is_string($alg) || $alg !== ($cfg['alg'] ?? 'RS256')) {
+            throw new RuntimeException('Unexpected JWT alg: ' . ($alg ?: 'none'));
+        }
+
+        // Fetch JWKS and let firebase/php-jwt pick the right key by kid
+        $jwks  = $this->jwksMetadataService->fetch();
+        $keys  = JWK::parseKeySet($jwks);
+        $decoded = (array) JWT::decode($jwt, $keys);
+
+        // Claims checks
+        $this->assertIssuer($decoded, (array) ($cfg['accepted_issuers'] ?? []));
+        $this->assertNotExpired($decoded);
+        $this->assertAudience($decoded, (string) ($cfg['accepted_audience'] ?? 'EVE Online'));
+
+        return EveTokenDTO::fromPayload($decoded);
+    }
+
+    protected function split(string $jwt): array
+    {
+        $parts = explode('.', $jwt);
+        if (count($parts) !== 3) {
+            throw new RuntimeException('Invalid JWT format');
+        }
+        return $parts;
+    }
+
+    protected function b64urlDecode(string $s): string
+    {
+        $padded = strtr($s, '-_', '+/');
+        $padded .= str_repeat('=', (4 - strlen($padded) % 4) % 4);
+        $bin = base64_decode($padded, true);
+        if ($bin === false) {
+            throw new RuntimeException('Invalid base64url segment');
+        }
+        return $bin;
+    }
 
     /**
      * @throws JsonException
-     * @throws Exception
      */
-    public function validate(string $token): array
+    protected function jsonDecode(string $json): array
     {
-        $tokenParts = explode('.', $token);
-
-        if (count($tokenParts) !== 3) {
-            throw new RuntimeException('Invalid JWT format');
-        }
-
-        $payload = json_decode(base64_decode($tokenParts[1]), true, 512, JSON_THROW_ON_ERROR);
-
-        if (!$payload) {
-            throw new RuntimeException('Invalid token payload');
-        }
-
-
-        $this->validateExpiry($payload);
-        $this->validateIssuer($payload);
-
-        return [
-            'character_id' => $this->extractCharacterId($payload),
-            ...$payload,
-        ];
+        /** @var array|null $arr */
+        $arr = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        return $arr;
     }
 
-    protected function validateExpiry(array $payload): void
+    protected function assertIssuer(array $payload, array $acceptedIssuers): void
     {
-        if (isset($payload['exp']) && $payload['exp'] < time()) {
-            throw new RuntimeException('Token has expired');
-        }
-    }
-
-    protected function validateIssuer(array $payload): void
-    {
-        if (!isset($payload['iss']) && $payload['iss'] !== 'https://login.eveonline.com') {
+        $iss = $payload['iss'] ?? null;
+        if (!is_string($iss) || !in_array($iss, $acceptedIssuers, true)) {
             throw new RuntimeException('Invalid token issuer');
         }
     }
 
-    /*
-     * Extract the character ID from the user part of the payload.
-     *
-     */
-    protected function extractCharacterId(array $payload): int
+    protected function assertNotExpired(array $payload): void
     {
-        if (!isset($payload['sub'])) {
-            throw new RuntimeException('No character ID in token');
+        $exp = $payload['exp'] ?? null;
+        if (!is_int($exp) || $exp < time()) {
+            throw new RuntimeException('Token has expired');
+        }
+    }
+
+    protected function assertAudience(array $payload, string $expectedAud): void
+    {
+        if (!isset($payload['aud'])) {
+            return;
         }
 
-        // EVE user sub has the format "CHARACTER:EVE:123456"
-        $sub = str_replace('CHARACTER:EVE:', '', $payload['sub']);
+        $aud = $payload['aud'];
+        $ok = is_string($aud) ? $aud === $expectedAud : (is_array($aud) && in_array($expectedAud, $aud, true));
 
-        return (int) $sub;
+        if (!$ok) {
+            throw new RuntimeException('Invalid token audience');
+        }
     }
 }
