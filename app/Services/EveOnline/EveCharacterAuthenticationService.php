@@ -14,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use JsonException;
 use RuntimeException;
+use Throwable;
 
 /**
  * Service for handling EVE Online authentication and character linkage.
@@ -26,10 +27,8 @@ readonly class EveCharacterAuthenticationService
     public function __construct(
         private EveTokenValidator      $eveTokenValidator,
         private EVECharacterRepository $eveCharacterRepository
-    )
-    {
+    ){
     }
-
 
     /**
      * Authenticate a user via EVE SSO.
@@ -41,6 +40,7 @@ readonly class EveCharacterAuthenticationService
      * @param SocialiteUser $eveIdentity The user identity provided by the EVE SSO service.
      * @return JsonResponse The response indicating the result of authentication.
      * @throws RuntimeException|JsonException If the token payload is invalid or missing necessary fields.
+     * @throws Throwable
      */
     public function authenticate(SocialiteUser $eveIdentity): JsonResponse
     {
@@ -128,6 +128,7 @@ readonly class EveCharacterAuthenticationService
      * @param array $validated Validated data for the character.
      * @param array $tokenData Token data associated with the character.
      * @return JsonResponse         JSON response indicating authentication status or additional actions.
+     * @throws Throwable
      */
     private function loginViaCharacter(int $characterId, string $name, array $validated, array $tokenData): JsonResponse
     {
@@ -178,7 +179,7 @@ readonly class EveCharacterAuthenticationService
      * @param array $tokenData The token data for authentication.
      *
      * @return JsonResponse
-     * @throws \Throwable
+     * @throws Throwable
      */
     private function linkCharacter(User $user, int $characterId, array $validated, array $tokenData): JsonResponse
     {
