@@ -1,13 +1,18 @@
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import ContainerLayout from './layout/ContainerLayout.vue'
+import SidebarLayout from './layout/SidebarLayout.vue'
 
-import Navigation from "@/layout/components/navigation.vue";
+const route = useRoute()
+const layout = computed(() => {
+    const layoutName = route.meta.layout || 'ContainerLayout'
+    return layoutName === 'ContainerLayout' ? ContainerLayout : SidebarLayout
+})
 </script>
 
 <template>
-    <Navigation />
-    <RouterView />
+    <component :is="layout">
+        <router-view></router-view>
+    </component>
 </template>
-
-<style scoped>
-
-</style>

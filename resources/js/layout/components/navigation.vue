@@ -6,6 +6,8 @@
         </div>
         <div class="navbar-menu">
             <RouterLink class="navbar-item" to="/">Home</RouterLink>
+            <RouterLink class="navbar-item" to="/dashboard">Dashboard</RouterLink>
+            <RouterLink class="navbar-item" to="/dashboard/profile">Profile</RouterLink>
         </div>
         <div class="navbar-end">
             <div class="navbar-item">

@@ -1,30 +1,42 @@
-// router.js (plain JS)
 import { createRouter, createWebHistory } from 'vue-router';
 
-const routes = [
+export const routes = [
     {
         path: '/',
-        name: 'home', component: () => import('./Pages/HomeView.vue'),
+        name: 'home', component: () => import('./pages/HomeView.vue'),
         meta: {
-            requiresAuth: false
+            requiresAuth: false,
+            layout: 'ContainerLayout'
         }
     },
     {
         path: '/dashboard',
         name: 'dashboard',
-        component: () => import('./Pages/DashboardView.vue'),
+        component: () => import('./pages/DashboardView.vue'),
         meta: {
-            requiresAuth: true
+            requiresAuth: true,
+            layout: 'ContainerLayout'
+        }
+    },
+    {
+        path: '/dashboard/profile',
+        name: 'profile',
+        component: () => import('./pages/profile/index.vue'),
+        meta: {
+            layout: 'SidebarLayout',
+            requiresAuth: true,
         }
     },
     {
         path: '/account/register',
         name: 'register',
-        component: () => import('./Pages/RegisterView.vue'),
+        component: () => import('./pages/RegisterView.vue'),
         meta: {
-            requiresAuth: true
+            requiresAuth: true,
+            layout: 'ContainerLayout'
         }
-    }
+    },
+
 ];
 
 const router = createRouter({ history: createWebHistory('/'), routes });
