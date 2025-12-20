@@ -5,7 +5,7 @@ import Navigation from "@/layout/components/navigation.vue";
 
 <template>
     <Navigation />
-    <div class="container mx-auto px-4">
+    <div class="container is-align-content-center mx-auto px-4">
         <router-view></router-view>
     </div>
 </template>

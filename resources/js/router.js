@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useUserStore } from './stores/user';
+import axios from 'axios'
 
 export const routes = [
     {
         path: '/',
-        name: 'home', component: () => import('./pages/HomeView.vue'),
+        name: 'home', component: () => import('./pages/home/index.vue'),
         meta: {
             requiresAuth: false,
             layout: 'ContainerLayout'
@@ -12,7 +14,7 @@ export const routes = [
     {
         path: '/dashboard',
         name: 'dashboard',
-        component: () => import('./pages/DashboardView.vue'),
+        component: () => import('./pages/dashboard/index.vue'),
         meta: {
             requiresAuth: true,
             layout: 'ContainerLayout'
@@ -30,9 +32,9 @@ export const routes = [
     {
         path: '/account/register',
         name: 'register',
-        component: () => import('./pages/RegisterView.vue'),
+        component: () => import('./pages/register/index.vue'),
         meta: {
-            requiresAuth: true,
+            requiresAuth: false,
             layout: 'ContainerLayout'
         }
     },
@@ -41,28 +43,18 @@ export const routes = [
 
 const router = createRouter({ history: createWebHistory('/'), routes });
 
-let bootstrapped = false;
-let isAuthenticated = false;
-
-async function bootstrapSession() {
-    if (bootstrapped) return;
-    await fetch('/sanctum/csrf-cookie', { credentials: 'include' });
-    const response = await fetch('/api/me', { credentials: 'include', headers: { Accept: 'application/json' } });
-    isAuthenticated = response.ok;
-    bootstrapped = true;
-}
-
 router.beforeEach(async (to) => {
-    await bootstrapSession();
+   const userStore = useUserStore();
+   await userStore.authBootstrap();
 
-    // if logout hit the laravel logout do the logout and then redirect to home
     if (to.path === '/logout') {
-        await fetch('/logout', { credentials: 'include' });
+        await axios.post('/logout', {}, { withCredentials: true });
+        userStore.$reset();
         window.location.href = '/';
         return false;
     }
 
-    if (to.meta.requiresAuth && !isAuthenticated) {
+    if (to.meta.requiresAuth && !userStore.isAuthenticated) {
         const returnTo = encodeURIComponent(to.fullPath);
 
         // HARD NAVIGATION – leave the SPA to Laravel

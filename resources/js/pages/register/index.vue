@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
-import dbmLogo from "../../assets/images/dbmLogo.png";
+import dbmLogo from "../../../assets/images/dbmLogo.png";
 import axios from "axios";
-import router from "@/routes.js";
+import router from "@/router.js";
 
 const email = ref("");
 const submitted = ref(false);
@@ -24,11 +24,11 @@ function handleSubmit(event) {
     submitted.value = true;
 
     if (validEmail.value) {
-       axios.post('/api/account/register', {
-              email: email.value
-       }).then(() => {
-           router.push('/dashboard')
-       })
+        axios.post('/api/account/register', {
+            email: email.value
+        }).then(() => {
+            router.push('/dashboard')
+        })
     }
 }
 
@@ -39,10 +39,11 @@ function handleSubmit(event) {
             <div class="container is-flex is-justify-content-center">
                 <div class="login box">
                     <form class="" @submit="handleSubmit">
-                        <div class="field is-flex is-justify-content-center">
+                        <div class="field is-flex is-align-items-center is-flex-direction-column">
                             <img :src="dbmLogo" class="image is-128x128" alt="Corp logo for Drunken Beaver Mining"/>
+                            <p class="pt-2">An email is needed to finish off the registration, although not actually required to sign in </p>
                         </div>
-<!--                        Need a input for capturing an email-->
+                        <!--                        Need a input for capturing an email-->
                         <div class="field">
                             <label class="label">Email</label>
                             <div class="control">
