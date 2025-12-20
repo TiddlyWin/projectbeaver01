@@ -1,14 +1,30 @@
+<script setup>
+import {useTheme} from '@/composables/useTheme.js'
+
+import dbmLogo from '../../../assets/images/dbmLogo.png'
+import {useUserStore} from "@/stores/user.js";
+
+const {mode, setTheme } = useTheme()
+const userStore = useUserStore()
+
+</script>
+
 <template>
     <nav class="navbar" role="navigation" aria-label="main navigation">
         <div class="navbar-brand m-1">
             <img :src="dbmLogo" class="image is-64x64" alt="">
             <a class="navbar-item title">DBM Tools</a>
         </div>
-        <div class="navbar-menu">
-            <RouterLink class="navbar-item" to="/">Home</RouterLink>
+        <div v-if="!userStore.isAuthenticated" class="navbar-menu">
+                <RouterLink class="navbar-item" to="/">Home</RouterLink>
+        </div>
+        <div v-else class="navbar-menu">
             <RouterLink class="navbar-item" to="/dashboard">Dashboard</RouterLink>
             <RouterLink class="navbar-item" to="/dashboard/profile">Profile</RouterLink>
+<!--            <RouterLink class="navbar-item" to="/characters">Characters Scopes</RouterLink>-->
+<!--            <RouterLink class="navbar-item" to="/settings">Settings</RouterLink>-->
         </div>
+
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
@@ -42,14 +58,6 @@
         </div>
     </nav>
 </template>
-
-<script setup>
-import {useTheme} from '@/composables/useTheme.js'
-
-import dbmLogo from '../../../assets/images/dbmLogo.png'
-
-const {mode, setTheme } = useTheme()
-</script>
 
 <style scoped>
 /* Optional: make the selected theme button visually distinct */

@@ -1,4 +1,8 @@
 <script setup>
+import { onMounted } from 'vue';
+import {useUserStore} from "@/stores/user.js";
+
+const userStore = useUserStore();
 
 </script>
 
@@ -8,15 +12,20 @@
         <div class="container column is-10">
             <div class="section">
                 <div class="card">
-                    <div class="card-header">
-                        <p class="card-header-title">
-                            Dashboard
-                        </p>
-                    </div>
                     <div class="card-content">
                         <div class="content">
                             <p>
-                                This site is currently under development. More features will be added soon.
+                                Hey <strong>{{ userStore?.user || 'Pilot' }}!</strong>, welcome to DBM Tools,
+                                your EVE Online corporation management suite. It may not look like much
+                                now, but we're working to bring you new features and improvements to
+                                enhance your experience. Stay tuned for updates!
+                            </p>
+                            <p>
+                                Right now, we are actively developing a feature that will allow you track your
+                                moon mining. If you have any suggestions or feedback, please don't hesitate to
+                                reach out to us on Discord.
+                                Your input is invaluable in helping us shape the future of DBM
+
                             </p>
                         </div>
                     </div>

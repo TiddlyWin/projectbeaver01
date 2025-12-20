@@ -6,6 +6,7 @@ axios.defaults.withCredentials = true
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 export const useUserStore = defineStore('user', () => {
+    const isAuthenticated = ref(false)
     const user = ref(null)
     const characters = ref([])
     const mainCharacter = ref(null)
@@ -20,6 +21,7 @@ export const useUserStore = defineStore('user', () => {
         try {
             const response = await axios.get('/api/me')
             user.value = response.data.name
+            isAuthenticated.value = true
             console.log('Fetched user data:', response.data.name)
             characters.value = response.data.characters
             mainCharacter.value = response.data.main_character || null
@@ -49,6 +51,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     return {
+        isAuthenticated: computed(() => isAuthenticated.value),
         user: computed(() => user.value),
         characters: computed(() => characters.value),
         mainCharacter: computed(() => mainCharacter.value),

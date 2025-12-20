@@ -20,9 +20,6 @@ async function logout() {
     }
 }
 
-onMounted(async () => {
-    await userStore.fetchUser()
-})
 
 </script>
 
