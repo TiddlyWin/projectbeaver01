@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 export const routes = [
     {
         path: '/',
-        name: 'home', component: () => import('./pages/HomeView.vue'),
+        name: 'home', component: () => import('./pages/home/index.vue'),
         meta: {
             requiresAuth: false,
             layout: 'ContainerLayout'
@@ -12,7 +12,7 @@ export const routes = [
     {
         path: '/dashboard',
         name: 'dashboard',
-        component: () => import('./pages/DashboardView.vue'),
+        component: () => import('./pages/dashboard/index.vue'),
         meta: {
             requiresAuth: true,
             layout: 'ContainerLayout'
@@ -30,7 +30,7 @@ export const routes = [
     {
         path: '/account/register',
         name: 'register',
-        component: () => import('./pages/RegisterView.vue'),
+        component: () => import('./pages/register/index.vue'),
         meta: {
             requiresAuth: true,
             layout: 'ContainerLayout'
