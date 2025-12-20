@@ -1,73 +1,11 @@
 <script setup>
-import {ref, onMounted, watchEffect} from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-import { fetch } from "@/composables/fetch.js";
-
-/**
- * @typedef {Object} Character
- * @property {number} id
- * @property {string} name
- * @property {string} [portrait_url]
- */
-
-/**
- * @typedef {Object} UserData
- * @property {string} name
- * @property {Character[]} characters
- * @property {Character|null} main_character
- */
-
-
-// Configure axios to include CSRF token
-axios.defaults.withCredentials = true
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+import {onMounted} from 'vue'
+import {useRouter} from 'vue-router'
+import {useUserStore} from "@/stores/user.js";
+import axios from "axios";
 
 const router = useRouter()
-const user = ref(null)
-const characters = ref([])
-const mainCharacter = ref(null)
-const loading = ref(true)
-
-
-async function fetchUserData() {
-    loading.value = true
-    const { data, error } = fetch('/api/me')
-
-    watchEffect(() => {
-        if (data.value) {
-            user.value = data.value
-            characters.value = data.value.characters || []
-            mainCharacter.value = data.value.main_character
-            loading.value = false
-        }
-
-        if (error.value) {
-            console.error('Failed to fetch user data:', error.value)
-            loading.value = false
-        }
-    })
-}
-
-
-
-async function setMainCharacter(characterId) {
-    const { data, error } = fetch(`/api/characters/${characterId}/set-main`, {
-        method: 'POST'
-    })
-
-    watchEffect(() => {
-        if (data.value) {
-            characters.value = data.value.characters
-            mainCharacter.value = data.value.main_character
-        }
-
-        if (error.value) {
-            console.error('Failed to set main character:', error.value)
-        }
-    })
-}
-
+const userStore = useUserStore()
 
 function linkMoreCharacters() {
     window.location.href = '/auth/eve/redirect'
@@ -82,79 +20,83 @@ async function logout() {
     }
 }
 
-onMounted(() => {
-    fetchUserData()
+onMounted(async () => {
+    await userStore.fetchUser()
 })
+
 </script>
 
 <template>
-   <section>
-       <div class="dashboard">
-           <div class="header">
-               <h1>Dashboard</h1>
-               <button @click="logout" class="logout-btn">Logout</button>
-           </div>
+    <section class="is-flex-grow-1">
+        <div class="dashboard">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <button @click="logout" class="logout-btn">Logout</button>
+            </div>
 
-           <div v-if="loading" class="loading">
-               Loading...
-           </div>
+            <div v-if="userStore.loading" class="loading">
+                Loading...
+            </div>
 
-           <div v-else class="content">
-               <div class="welcome">
-                   <h2>Welcome, {{ user?.name || 'Pilot' }}!</h2>
-                   <p v-if="mainCharacter">Main Character: <strong>{{ mainCharacter.name }}</strong></p>
-               </div>
+            <div v-else class="content">
+                <div class="welcome">
+                    <h2>Welcome, {{ userStore?.user || 'Pilot' }}!</h2>
+                    <p v-if="userStore.mainCharacter">Main Character: <strong>{{
+                            userStore.mainCharacter.name
+                        }}</strong></p>
+                </div>
 
-               <div class="characters-section">
-                   <div class="section-header">
-                       <h3>Your Characters ({{ characters.length }})</h3>
-                       <button @click="linkMoreCharacters" class="link-btn">
-                           Link More Characters
-                       </button>
-                   </div>
+                <div class="characters-section">
+                    <div class="section-header">
+                        <h3>Your Characters ({{ userStore.characters.length }})</h3>
+                        <button @click="linkMoreCharacters" class="link-btn">
+                            Link More Characters
+                        </button>
+                    </div>
 
-                   <div v-if="characters.length === 0" class="no-characters">
-                       <p>No characters linked yet.</p>
-                       <button @click="linkMoreCharacters" class="link-btn primary">
-                           Link Your First Character
-                       </button>
-                   </div>
+                    <div v-if="userStore.characters.length === 0" class="no-characters">
+                        <p>No characters linked yet.</p>
+                        <button @click="linkMoreCharacters" class="link-btn primary">
+                            Link Your First Character
+                        </button>
+                    </div>
 
-                   <div v-else class="characters-grid">
-                       <div
-                           v-for="character in characters"
-                           :key="character.id"
-                           class="character-card"
-                           :class="{ 'main-character': character.id === mainCharacter?.id }"
-                       >
-                           <div class="character-info">
-                               <img
-                                   v-if="character.portrait_url"
-                                   :src="character.portrait_url"
-                                   :alt="character.name"
-                                   class="character-portrait"
-                               />
-                               <div class="character-details">
-                                   <h4>{{ character.name }}</h4>
-                                   <p v-if="character.id === mainCharacter?.id" class="main-badge">
-                                       Main Character
-                                   </p>
-                               </div>
-                           </div>
+                    <div v-else class="characters-grid">
+                        <div
+                            v-for="character in userStore.characters"
+                            :key="character.id"
+                            class="character-card"
+                            :class="{ 'main-character': character.id === userStore.mainCharacter?.id }"
+                        >
+                            <!-- Character card content -->
+                            <div class="character-info">
+                                <img
+                                    v-if="character.portrait_url"
+                                    :src="character.portrait_url"
+                                    :alt="character.name"
+                                    class="character-portrait"
+                                />
+                                <div class="character-details">
+                                    <h4>{{ character.name }}</h4>
+                                    <p v-if="character.id === userStore.mainCharacter?.id" class="main-badge">
+                                        Main Character
+                                    </p>
+                                </div>
+                            </div>
 
-                           <button
-                               v-if="character.id !== mainCharacter?.id"
-                               @click="setMainCharacter(character.id)"
-                               class="set-main-btn"
-                           >
-                               Set as Main
-                           </button>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-   </section>
+                            <button
+                                v-if="character.id !== userStore.mainCharacter?.id"
+                                @click="userStore.setMainCharacter(character.id)"
+                                class="set-main-btn"
+                            >
+                                Set as Main
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </template>
 
 <style scoped>

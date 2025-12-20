@@ -167,6 +167,7 @@ readonly class EveCharacterAuthenticationService
                 ]);
                 throw $e;
             }
+
         }
 
         Auth::login($user);
