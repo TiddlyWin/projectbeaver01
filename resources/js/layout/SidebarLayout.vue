@@ -8,7 +8,7 @@ import Sidebar from "@/layout/components/sidebar.vue";
 <Navigation />
     <div class="is-flex">
         <Sidebar />
-        <main class="bulma-is-flex-grow-1">
+        <main class="is-flex is-flex-grow-1">
             <router-view></router-view>
         </main>
     </div>
