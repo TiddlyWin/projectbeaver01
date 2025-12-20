@@ -6,6 +6,7 @@ use App\Services\EveOnline\EveCharacterAuthenticationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 use Throwable;
@@ -41,10 +42,23 @@ class AuthController
             }
 
             return redirect()->intended(config('app.auth_frontend'));
+        } catch (ValidationException $e) {
+            return $this->redirectWithError('validation_error', $e->getMessage());
         } catch (Throwable $e) {
             report($e);
-            return redirect(config('app.frontend') . '?error=auth_failed');
+            return $this->redirectWithError('auth_failed', $e->getMessage());
         }
+    }
+
+    /**
+     * Create a redirect response with error parameters
+     */
+    private function redirectWithError(string $errorType, string $message): RedirectResponse
+    {
+        return redirect(config('app.frontend') . '?' . http_build_query([
+                'error' => $errorType,
+                'message' => $message
+            ]));
     }
 
     public function logout(): Response
