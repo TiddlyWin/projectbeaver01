@@ -29,7 +29,8 @@ readonly class EveCharacterAuthenticationService
     public function __construct(
         private EveTokenValidator      $eveTokenValidator,
         private EVECharacterRepository $eveCharacterRepository
-    ){
+    )
+    {
     }
 
     /**
@@ -73,7 +74,7 @@ readonly class EveCharacterAuthenticationService
         }
 
         // Slightly more readable to separate the two paths
-        if(Auth::check()) {
+        if (Auth::check()) {
             Log::info('[EveAuth] User already authenticated, linking character to existing user.');
             return $this->linkCharacter(Auth::user(), $characterId, $validatedDTO, $tokenObj);
         }
@@ -89,10 +90,10 @@ readonly class EveCharacterAuthenticationService
     private function makeTokenObject(SocialiteUser $eveIdentity): array
     {
         return [
-            'access_token' => $eveIdentity->token,
-            'refresh_token' => $eveIdentity->refreshToken,
-            'expires_in' => $eveIdentity->expiresIn,
-            'scopes' => $eveIdentity->scopes
+            'access_token' => $eveIdentity->token ?? null,
+            'refresh_token' => $eveIdentity->refreshToken ?? null,
+            'expires_in' => $eveIdentity->expiresIn ?? null,
+            'scopes' => $eveIdentity->scopes ?? null
         ];
     }
 
@@ -154,18 +155,26 @@ readonly class EveCharacterAuthenticationService
             $this->eveCharacterRepository->createOrUpdateCharacter($user, $characterId, $validated, $tokenData);
 
         } else {
-
             Log::info('[EveAuth] Found existing character, resolving user.');
+
             try {
-
                 $user = $this->resolveUserFromCharacter($character);
-
             } catch (ValidationException $e) {
                 Log::warning('[EveAuth] User resolution failed', [
                     'character_id' => $characterId,
                     'errors' => $e->errors(),
                 ]);
                 throw $e;
+            }
+
+            try {
+                $this->eveCharacterRepository->createOrUpdateCharacter($user, $characterId, $validated, $tokenData);
+
+            } catch (Throwable $e) {
+                Log::error('[EveAuth] Failed to update character', [
+                    'character_id' => $characterId,
+                    'errors' => $e->getMessage(),
+                ]);
             }
 
         }
@@ -195,7 +204,7 @@ readonly class EveCharacterAuthenticationService
     {
         Log::info('[EveAuth] Linking character to existing user');
 
-        if($this->eveCharacterRepository->existForOtherUser($characterId, $user->id)) {
+        if ($this->eveCharacterRepository->existForOtherUser($characterId, $user->id)) {
             Log::warning('[EveAuth] Character already linked to another user', [
                 'user_id' => $user->id,
                 'character_id' => $characterId,
