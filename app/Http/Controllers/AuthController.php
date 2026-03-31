@@ -11,7 +11,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 use Throwable;
 
-class AuthController
+class AuthController extends Controller
 {
     public function __construct(
         protected EveCharacterAuthenticationService $eveAuth
@@ -21,7 +21,7 @@ class AuthController
     /**
      * @throws Throwable
      */
-    public function redirectToEve()
+    public function redirectToEve(): RedirectResponse
     {
         return Socialite::driver('eveonline')->redirect();
     }
@@ -35,9 +35,10 @@ class AuthController
             $eveIdentity = Socialite::driver('eveonline')->user();
             $result = $this->eveAuth->authenticate($eveIdentity);
 
-            $data = $result->getData('needs_email');
+            $data = $result->getData();
+            $needsEmail = isset($data['needs_email']) && $data['needs_email'];
 
-            if($data['needs_email']) {
+            if($needsEmail) {
                 return redirect()->intended(config('app.register_email_uri'));
             }
 
