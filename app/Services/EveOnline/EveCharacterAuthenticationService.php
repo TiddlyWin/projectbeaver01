@@ -75,7 +75,7 @@ readonly class EveCharacterAuthenticationService
 
         // Slightly more readable to separate the two paths
         if (Auth::check()) {
-            Log::info('[EveAuth] User already authenticated, linking character to existing user.');
+            Log::info('[EveAuth] User already authenticated, attempting to link character to existing user.');
             return $this->linkCharacter(Auth::user(), $characterId, $validatedDTO, $tokenObj);
         }
 

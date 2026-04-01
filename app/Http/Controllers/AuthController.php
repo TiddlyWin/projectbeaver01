@@ -36,7 +36,7 @@ class AuthController extends Controller
             $result = $this->eveAuth->authenticate($eveIdentity);
 
             $data = $result->getData();
-            $needsEmail = isset($data['needs_email']) && $data['needs_email'];
+            $needsEmail = !empty($data->needs_email);
 
             if($needsEmail) {
                 return redirect()->intended(config('app.register_email_uri'));
