@@ -14,4 +14,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/characters/{character}/set-main', [CharacterController::class, 'setMain']);
+
+    Route::group(['prefix' => '/esi'], static function() {
+       Route::post('roles', [ProfileController::class, 'checkRoles']);
+    });
 });

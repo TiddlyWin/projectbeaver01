@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme.js'
 import { useUserStore } from '@/stores/user.js'
+import dbmLogo from '../../../assets/images/dbmLogo.png'
 
 const { mode, setTheme } = useTheme()
 const userStore = useUserStore()
@@ -23,7 +24,9 @@ const initials = computed(() => {
     <nav class="topnav" role="navigation" aria-label="main navigation">
 
         <div class="topnav__brand">
-            <span class="topnav__logo">DBM</span>
+            <span class="topnav__logo my-2">
+                <img :src="dbmLogo" class="image is-64x64" alt="">
+            </span>
             <span class="topnav__name">DBM Tools</span>
         </div>
 
@@ -49,7 +52,7 @@ const initials = computed(() => {
             <div class="topnav__divider" />
 
             <button
-                class="topnav__burger"
+                class="topnav__burger is-hidden-desktop"
                 :class="{ 'is-open': menuOpen }"
                 :aria-expanded="menuOpen"
                 aria-label="Toggle navigation"
@@ -95,8 +98,8 @@ const initials = computed(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 56px;
-    padding: 0 1rem;
+    height: 80px;
+    padding: .5rem 1rem;
     background: var(--bulma-scheme-main);
     border-bottom: 1px solid var(--bulma-border);
 
@@ -107,11 +110,8 @@ const initials = computed(() => {
     }
 
     &__logo {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: var(--bulma-link);
-        color: var(--bulma-link-invert);
+        width: 64px;
+        height: 64px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -121,7 +121,7 @@ const initials = computed(() => {
     }
 
     &__name {
-        font-size: 0.9rem;
+        font-size: 1.125rem;
         font-weight: 600;
         color: var(--bulma-text);
     }
